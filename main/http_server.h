@@ -6,7 +6,6 @@
 #define OTA_UPDATE_SUCCESSFUL   1
 #define OTA_UPDATE_FAILED       -1
 
-#define CONFIG_LOG_MAXIMUM_LEVEL 1
 // messages for HTTP monitor
 typedef enum http_server_message
 {
