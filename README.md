@@ -3,7 +3,8 @@
 
 # ESP_WIFI_SERIES
 
-Quinn review ESP32 just for funnnnn.
+Quinn reviewing ESP32 just for funnnn. 
+This code is part of Quinn's learning process in the lab and has been referenced from multiple sources like Udemy.
 
 (See the README.md file in the upper level 'examples' directory for more information about examples.)
 
