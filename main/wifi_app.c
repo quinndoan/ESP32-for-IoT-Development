@@ -3,6 +3,7 @@
 #include "freertos/task.h"
 #include <queue.h>
 #include "esp_err.h"
+#include "esp_mac.h"
 #include "esp_log.h"
 #include "esp_wifi.h"
 #include "lwip/err.h"
@@ -13,7 +14,6 @@
 #include "esp_wifi.h"
 #include "esp_heap_caps.h"
 #include "lwip/sockets.h"
-#include "esp_mac.h"
 #include "wifi_app.h"
 
 static const char TAG[] = "wifi_app";

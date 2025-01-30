@@ -1,9 +1,9 @@
 | Supported Targets | ESP32 | ESP32-C2 | ESP32-C3 | ESP32-C5 | ESP32-C6 | ESP32-C61 | ESP32-H2 | ESP32-P4 | ESP32-S2 | ESP32-S3 | Linux |
 | ----------------- | ----- | -------- | -------- | -------- | -------- | --------- | -------- | -------- | -------- | -------- | ----- |
 
-# Hello World Example
+# ESP_WIFI_SERIES
 
-Starts a FreeRTOS task to print "Hello World".
+Quinn review ESP32 just for funnnnn.
 
 (See the README.md file in the upper level 'examples' directory for more information about examples.)
 
@@ -19,7 +19,7 @@ Select the instructions depending on Espressif chip installed on your developmen
 
 ## Example folder contents
 
-The project **hello_world** contains one source file in C language [hello_world_main.c](main/hello_world_main.c). The file is located in folder [main](main).
+The project contains source files in C language. The file is located in folder [main](main).
 
 ESP-IDF projects are built using CMake. The project build configuration is contained in `CMakeLists.txt` files that provide set of directives and instructions describing the project's source files and targets (executable, library, or both).
 
