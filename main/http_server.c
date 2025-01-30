@@ -8,8 +8,13 @@
 #include "esp_wifi.h"
 #include <queue.h>
 #include <esp_ota_ops.h>
+#include "wifi_app.h"
 
 static const char TAG[] = "http_server";
+
+// static wifi connect status
+static int g_wifi_connect_status = NONE;
+
 // http server task handle
 static httpd_handle_t http_server_handle = NULL;
 
@@ -73,19 +78,22 @@ static void http_server_monitor(void *parameter){
             case HTTP_MSG_WIFI_CONNECT_INIT/* constant-expression */:
                 /* code */
                 ESP_LOGI_LEVEL(TAG, "HTTP_MSG_WIFI_CONNECT_INIT");
+				g_wifi_connect_status = HTTP_WIFI_STATUS_CONNECTING;
                 break;
             case HTTP_MSG_WIFI_CONNECT_SUCCESS:
 					ESP_LOGI_LEVEL(TAG, "HTTP_MSG_WIFI_CONNECT_SUCCESS");
-
+					g_wifi_connect_status = HTTP_WIFI_STATUS_CONNECT_SUCCESS;
 					break;
 
 				case HTTP_MSG_WIFI_CONNECT_FAIL:
 					ESP_LOGI_LEVEL(TAG, "HTTP_MSG_WIFI_CONNECT_FAIL");
+					g_wifi_connect_status = HTTP_WIFI_STATUS_CONNECT_FAILED;
 
 					break;
 
 				case HTTP_MSG_OTA_UPDATE_SUCCESSFUL:
 					ESP_LOGI_LEVEL(TAG, "HTTP_MSG_OTA_UPDATE_SUCCESSFUL");
+					g_fw_update_status = OTA_UPDATE_SUCCESSFUL;
                     http_server_fw_update_reset_timer();
 					break;
 
@@ -224,6 +232,51 @@ static httpd_handle_t http_server_configure(void){
 		};
 		httpd_register_uri_handler(http_server_handle, &favicon_ico);
 
+		// register OTAupdate handler
+		httpd_uri_t OTA_update = {
+				.uri = "/OTAupdate",
+				.method = HTTP_POST,
+				.handler = http_server_OTA_update_handler,
+				.user_ctx = NULL
+		};
+		httpd_register_uri_handler(http_server_handle, &OTA_update);
+
+		// register OTAstatus handler
+		httpd_uri_t OTA_status = {
+				.uri = "/OTAstatus",
+				.method = HTTP_POST,
+				.handler = http_server_OTA_status_handler,
+				.user_ctx = NULL
+		};
+		httpd_register_uri_handler(http_server_handle, &OTA_status);
+
+		// // register dhtSensor.json handler
+		// httpd_uri_t dht_sensor_json = {
+		// 		.uri = "/dhtSensor.json",
+		// 		.method = HTTP_GET,
+		// 		.handler = http_server_get_dht_sensor_readings_json_handler,
+		// 		.user_ctx = NULL
+		// };
+		// httpd_register_uri_handler(http_server_handle, &dht_sensor_json);
+
+		// register wifiConnect.json handler
+		httpd_uri_t wifi_connect_json = {
+				.uri = "/wifiConnect.json",
+				.method = HTTP_POST,
+				.handler = http_server_wifi_connect_json_handler,
+				.user_ctx = NULL
+		};
+		httpd_register_uri_handler(http_server_handle, &wifi_connect_json);
+
+		// register wifiConnectStatus.json handler
+		httpd_uri_t wifi_connect_status_json = {
+				.uri = "/wifiConnectStatus",
+				.method = HTTP_POST,
+				.handler = http_server_wifi_connect_status_json_handler,
+				.user_ctx = NULL
+		};
+		httpd_register_uri_handler(http_server_handle, &wifi_connect_status_json);
+
 		return http_server_handle;
 	}
 
@@ -259,6 +312,7 @@ esp_err_t http_server_OTA_update_handler(httpd_req_t *req){
             // get location
             char *body_start_p = strstr(ota_buff, "\r\n\r\n")+ 4;
             int body_part_len = recv_len - (body_start_p - ota_buff);
+
             printf("http_server_OTA_update_handler: OTA file size: %d\r\n", content_length);
             esp_err_t err = esp_ota_begin(update_partition, OTA_SIZE_UNKNOWN, &ota_handle);
             if (err!= ESP_OK){
@@ -269,9 +323,12 @@ esp_err_t http_server_OTA_update_handler(httpd_req_t *req){
                 printf("Writing to partition");
 
             }
+			 // write to the first part of the data
+            esp_ota_write(ota_handle, body_start_p, body_part_len);
+            content_received += body_part_len;
         }
         else{
-            // write to the first part of the data
+            // write to OTA
             esp_ota_write(ota_handle, ota_buff, recv_len);
             content_received += recv_len;
         
@@ -310,6 +367,62 @@ esp_err_t http_server_OTA_status_handler(httpd_req_t *req){
     httpd_resp_set_type(req, "application/json");
     httpd_resp_send(req, otaJSON, strlen(otaJSON));
     return ESP_OK;
+}
+
+static esp_err_t http_server_wifi_connect_json_handler(httpd_req_t *req){
+	ESP_LOGI(TAG, "/wifiConnect.json requested");
+	size_t len_ssid = 0, len_pass =0;
+	char *ssid_ptr = NULL, *pass_str = NULL;
+
+	// get ssid header
+	len_ssid = httpd_req_get_hdr_value_len(req, "my_connect_ssid")+1;
+	if (len_ssid >1){
+		ssid_ptr = malloc(len_ssid);
+		if (httpd_req_get_hdr_value_str(req, "my_connect_ssid", ssid_ptr, len_ssid)== ESP_OK){
+			ESP_LOGI(TAG, "http_server_wifi_connect_json_handler: found header");
+
+		}
+
+	}
+	// get pass header
+		len_pass = httpd_req_get_hdr_value_len(req, "my-connect-pwd") + 1;
+	if (len_pass > 1)
+	{
+		pass_str = malloc(len_pass);
+		if (httpd_req_get_hdr_value_str(req, "my-connect-pwd", pass_str, len_pass) == ESP_OK)
+		{
+			ESP_LOGI(TAG, "http_server_wifi_connect_json_handler: Found header => my-connect-pwd: %s", pass_str);
+		}
+	}
+
+	// update wifi and let the application knwow
+	wifi_config_t *wifi_config = wifi_app_get_wifi_config();
+	memset(wifi_config, 0x00, sizeof(wifi_config_t));
+	memcpy(wifi_config->sta.ssid, ssid_ptr, len_ssid);
+	memcpy(wifi_config->sta.password, pass_str, len_pass);
+	wifi_app_send_message(WIFI_APP_MSG_CONNECTING_FROM_HTTP_SERVER);
+	free(ssid_ptr);
+	free(pass_str);
+	return ESP_OK;
+}
+
+/**
+ * wifiConnectStatus handler updates the connection status for the web page.
+ * @param req HTTP request for which the uri needs to be handled.
+ * @return ESP_OK, cai nay phai hieu ve web nz, bun ghe
+ */
+static esp_err_t http_server_wifi_connect_status_json_handler(httpd_req_t *req)
+{
+	ESP_LOGI(TAG, "/wifiConnectStatus requested");
+
+	char statusJSON[100];
+
+	sprintf(statusJSON, "{\"wifi_connect_status\":%d}", g_wifi_connect_status);
+
+	httpd_resp_set_type(req, "application/json");
+	httpd_resp_send(req, statusJSON, strlen(statusJSON));
+
+	return ESP_OK;
 }
 
 void http_server_start(void)
