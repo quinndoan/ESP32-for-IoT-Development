@@ -277,6 +277,15 @@ static httpd_handle_t http_server_configure(void){
 		};
 		httpd_register_uri_handler(http_server_handle, &wifi_connect_status_json);
 
+		// register wifiDisconnectStatus.json handler
+		httpd_uri_t wifi_disconnect_json = {
+				.uri = "/wifiDisconnect.json",
+				.method = HTTP_DELETE,
+				.handler = http_server_wifi_disconnect_json_handler,
+				.user_ctx = NULL
+		};
+		httpd_register_uri_handler(http_server_handle, &wifi_disconnect_json);
+
 		return http_server_handle;
 	}
 
@@ -422,6 +431,13 @@ static esp_err_t http_server_wifi_connect_status_json_handler(httpd_req_t *req)
 	httpd_resp_set_type(req, "application/json");
 	httpd_resp_send(req, statusJSON, strlen(statusJSON));
 
+	return ESP_OK;
+}
+
+// responds by sending a message to wifi application
+static esp_err_t http_server_wifi_disconnect_json_handler(httpd_req_t *req){
+	ESP_LOGI(TAG, "wifiDisconnect.json requested");
+	wifi_app_send_message(WIFI_ASG_MSG_USER_REQUESTED_STA_DISCONNECTED);
 	return ESP_OK;
 }
 

@@ -14,11 +14,13 @@
 #include "esp_wifi.h"
 #include "esp_heap_caps.h"
 #include "lwip/sockets.h"
+#include "http_server.h"
 #include "wifi_app.h"
 
 static const char TAG[] = "wifi_app";
 static QueueHandle_t wifi_app_queue_handle;
-
+wifi_config_t *wifi_config = NULL;
+static int g_retry_number;
 esp_netif_t* esp_netif_sta = NULL;
 esp_netif_t* esp_netif_ap = NULL;
 #define CONFIG_ESP_WIFI_DYNAMIC_RX_BUFFER_NUM    10
@@ -180,6 +182,19 @@ static void wifi_app_task(void *pvParameters)
 				case WIFI_APP_MSG_STA_CONNECTED_GOT_IP:
 					ESP_LOGI(TAG, "WIFI_APP_MSG_STA_CONNECTED_GOT_IP");
 					rgb_led_wifi_connected();
+
+					break;
+				
+				case WIFI_APP_MSG_USER_REQUESTED_STA_DISCONNECT:
+					ESP_LOGI(TAG, "WIFI_APP_MSG_USER_REQUEST_STA_DISCONNECT");
+					g_retry_number = MAX_CONNECTION_RETRIES;
+					ESP_ERROR_CHECK(esp_wifi_disconnect());
+
+					break;
+				
+				case WIFI_APP_MSG_STA_DISCONNECTED:
+					ESP_LOGI(TAG, "WIFI_APP_MSG_STA_DISCONNECTED");
+					http_server_monitor_send_message(HTTP_MSG_WIFI_CONNECT_FAIL);
 
 					break;
 

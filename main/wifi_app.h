@@ -35,6 +35,7 @@ typedef enum wifi_app_message{
     WIFI_APP_MSG_USER_REQUESTED_STA_DISCONNECT,
     WIFI_APP_MSG_LOAD_SAVED_CREDENTIALS,
     WIFI_APP_MSG_STA_DISCONNECTED,
+    WIFI_ASG_MSG_USER_REQUESTED_STA_DISCONNECTED
 }wifi_app_message_e;
 
 typedef struct wifi_app_queue_message{

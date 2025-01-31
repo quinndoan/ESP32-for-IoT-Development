@@ -11,9 +11,14 @@ var wifiConnectInterval = null;
 $(document).ready(function(){
 	getUpdateStatus();
     startDHTSensorInterval();
+	getConnectInfo();
 	$("#connect_wifi").on("click", function(){
 		checkCredentials();
-	}); 
+	});
+	$("#disconnect_wifi").on("click", function(){
+		disconnectWifi();
+	});
+
 });   
 
 /**
@@ -259,5 +264,15 @@ function showPassword()
 	}
 }
 
-
+function disconnectWifi(){
+	$.ajax({
+		url: '/wifiDisconnect.json',
+		dataType: 'json',
+		method: 'DELETE',
+		cache: false,
+		data: { 'timestamp': Date.now() }
+	});
+	// Update the web page 2s per time
+	setTimeout("location.reload(true);", 2000);
+}
 
