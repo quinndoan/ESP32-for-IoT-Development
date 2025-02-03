@@ -16,4 +16,8 @@
 #define HTTP_SERVER_MONITOR_PRIORITY        3     // Độ ưu tiên thấp nhất trong các tác vụ vì nó không cần xử lý tức thì.
 #define HTTP_SERVER_MONITOR_CORE_ID         0     // Tác vụ giám sát cũng được đặt chạy trên Core 0.
 
+#define WIFI_RESET_BUTTON_TASK_STACK_SIZE   2048
+#define WIFI_RESET_BUTTON_PRIORITY          6
+#define WIFI_RESET_BUTTON_CORE_ID           0
+
 #endif
