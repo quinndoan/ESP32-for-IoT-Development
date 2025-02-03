@@ -14,6 +14,7 @@
 #include "esp_wifi.h"
 #include "esp_heap_caps.h"
 #include "lwip/sockets.h"
+#include "nvsImplement.h"
 #include "http_server.h"
 #include "wifi_app.h"
 
@@ -21,6 +22,13 @@ static const char TAG[] = "wifi_app";
 static QueueHandle_t wifi_app_queue_handle;
 wifi_config_t *wifi_config = NULL;
 static int g_retry_number;
+
+// wifi application event group and status bits
+static EventGroupHandle_t wifi_app_event_group;
+const int WIFI_APP_CONNECTING_USING_SAVED_CREDS_BIT		= BIT0;
+const int WIFI_APP_CONNECTING_USING_HTTP_SERVER_BIT		= BIT1;
+const int WIFI_APP_USER_REQUESTED_STA_DISCONNECT_BIT	= BIT2;
+
 esp_netif_t* esp_netif_sta = NULL;
 esp_netif_t* esp_netif_ap = NULL;
 #define CONFIG_ESP_WIFI_DYNAMIC_RX_BUFFER_NUM    10
@@ -59,6 +67,17 @@ static void wifi_app_event_handler(void *arg, esp_event_base_t event_base, int32
 
 			case WIFI_EVENT_STA_CONNECTED:
 				ESP_LOGI(TAG, "WIFI_EVENT_STA_CONNECTED");
+				wifi_event_sta_disconnected_t *wifi_event_sta_disconnected = (wifi_event_sta_disconnected_t*)malloc(sizeof(wifi_event_sta_disconnected_t));
+				*wifi_event_sta_disconnected = *((wifi_event_sta_disconnected_t*)event_data);
+				printf("WIFI_EVENT_STA_DISCONNECTED, reason code %d\n", wifi_event_sta_disconnected-> reason);
+				
+				if (g_retry_number < MAX_CONNECTION_RETRIES){
+					esp_wifi_connect();
+					g_retry_number++;
+				}
+				else{
+					wifi_app_send_message(WIFI_APP_MSG_STA_DISCONNECTED);
+				}
 				break;
 
 			case WIFI_EVENT_STA_DISCONNECTED:
@@ -72,6 +91,7 @@ static void wifi_app_event_handler(void *arg, esp_event_base_t event_base, int32
 		{
 			case IP_EVENT_STA_GOT_IP:
 				ESP_LOGI(TAG, "IP_EVENT_STA_GOT_IP");
+				wifi_app_send_message(WIFI_APP_MSG_STA_CONNECTED_GOT_IP);
 				break;
 		}
 	}
@@ -144,7 +164,7 @@ static void wifi_app_soft_ap_config(void)
 static void wifi_app_task(void *pvParameters)
 {
 	wifi_app_queue_message_t msg;
-
+	EventBits_t eventBits;
 	// Initialize the event handler
 	wifi_app_event_handler_init();
 
@@ -158,7 +178,8 @@ static void wifi_app_task(void *pvParameters)
 	ESP_ERROR_CHECK(esp_wifi_start());
 
 	// Send first event message
-	wifi_app_send_message(WIFI_APP_MSG_START_HTTP_SERVER);
+	wifi_app_send_message(WIFI_APP_MSG_LOAD_SAVED_CREDENTIALS);
+	// here change the first message to load saved credentials since we want to read from save credential first then choose actions
 
 	for (;;)
 	{
@@ -166,35 +187,94 @@ static void wifi_app_task(void *pvParameters)
 		{
 			switch (msg.msgID)
 			{
+				case WIFI_APP_MSG_LOAD_SAVED_CREDENTIALS:
+					ESP_LOGI(TAG, "WIFI_APP_MSG_LOAD_SAVED_CREDENTIALS");
+					if (app_nvs_load_sta_creds()){
+						ESP_LOGI(TAG, "Loaded station configuration");
+						wifi_app_connect_sta();
+						xEventGroupSetBits(wifi_app_event_group, WIFI_APP_CONNECTING_USING_SAVED_CREDS_BIT);
+
+					}
+					else{
+						ESP_LOGI(TAG, "Unable to load station configuration");
+					}
+					// start the web
+					wifi_app_send_message(WIFI_APP_MSG_START_HTTP_SERVER);
+					break;
+
 				case WIFI_APP_MSG_START_HTTP_SERVER:
 					ESP_LOGI(TAG, "WIFI_APP_MSG_START_HTTP_SERVER");
-
-//					http_server_start();
+					http_server_start();
 					rgb_led_http_server_started();
 
 					break;
 
 				case WIFI_APP_MSG_CONNECTING_FROM_HTTP_SERVER:
 					ESP_LOGI(TAG, "WIFI_APP_MSG_CONNECTING_FROM_HTTP_SERVER");
-
+					// bo sung xu ly status bit va event group
+					xEventGroupSetBits(wifi_app_event_group, WIFI_APP_CONNECTING_USING_HTTP_SERVER_BIT);
+					// appempt connection
+					wifi_app_connect_sta();
+					g_retry_number = 0;
+					// send message to http server to know connect attempt
+					http_server_monitor_send_message(HTTP_MSG_WIFI_CONNECT_INIT);
 					break;
 
 				case WIFI_APP_MSG_STA_CONNECTED_GOT_IP:
 					ESP_LOGI(TAG, "WIFI_APP_MSG_STA_CONNECTED_GOT_IP");
 					rgb_led_wifi_connected();
+					http_server_monitor_send_message(HTTP_MSG_WIFI_CONNECT_SUCCESS);
+					eventBits = xEventGroupGetBits(wifi_app_event_group);
+					if (eventBits & WIFI_APP_CONNECTING_USING_SAVED_CREDS_BIT){
+						xEventGroupClearBits(wifi_app_event_group, WIFI_APP_CONNECTING_USING_SAVED_CREDS_BIT);
+				
+					}
+					else{
+						app_nvs_save_sta_creds();
+					}
+					if (eventBits & WIFI_APP_MSG_CONNECTING_FROM_HTTP_SERVER){
+						xEventGroupClearBits(wifi_app_event_group, WIFI_APP_CONNECTING_USING_HTTP_SERVER_BIT);
+
+					}
 
 					break;
 				
 				case WIFI_APP_MSG_USER_REQUESTED_STA_DISCONNECT:
 					ESP_LOGI(TAG, "WIFI_APP_MSG_USER_REQUEST_STA_DISCONNECT");
+					xEventGroupSetBits(wifi_app_event_group,WIFI_APP_USER_REQUESTED_STA_DISCONNECT_BIT); 
 					g_retry_number = MAX_CONNECTION_RETRIES;
 					ESP_ERROR_CHECK(esp_wifi_disconnect());
+					app_nvs_clear_sta_creds();
+					rgb_led_http_server_started();
 
 					break;
 				
 				case WIFI_APP_MSG_STA_DISCONNECTED:
 					ESP_LOGI(TAG, "WIFI_APP_MSG_STA_DISCONNECTED");
-					http_server_monitor_send_message(HTTP_MSG_WIFI_CONNECT_FAIL);
+					eventBits = xEventGroupGetBits(wifi_app_event_group);
+					if (eventBits & WIFI_APP_CONNECTING_USING_SAVED_CREDS_BIT)
+					{
+						ESP_LOGI(TAG, "WIFI_APP_MSG_STA_DISCONNECTED: ATTEMPT USING SAVED CREDENTIALS");
+						xEventGroupClearBits(wifi_app_event_group, WIFI_APP_CONNECTING_USING_SAVED_CREDS_BIT);
+						app_nvs_clear_sta_creds();
+					}
+					else if (eventBits & WIFI_APP_CONNECTING_USING_HTTP_SERVER_BIT)
+					{
+						ESP_LOGI(TAG, "WIFI_APP_MSG_STA_DISCONNECTED: ATTEMPT FROM THE HTTP SERVER");
+						xEventGroupClearBits(wifi_app_event_group, WIFI_APP_CONNECTING_USING_HTTP_SERVER_BIT);
+						http_server_monitor_send_message(HTTP_MSG_WIFI_CONNECT_FAIL);
+					}
+					else if (eventBits & WIFI_APP_USER_REQUESTED_STA_DISCONNECT_BIT)
+					{
+						ESP_LOGI(TAG, "WIFI_APP_MSG_STA_DISCONNECTED: USER REQUESTED DISCONNECTION");
+						xEventGroupClearBits(wifi_app_event_group, WIFI_APP_USER_REQUESTED_STA_DISCONNECT_BIT);
+						http_server_monitor_send_message(HTTP_MSG_WIFI_USER_DISCONNECT);
+					}
+					else
+					{
+						ESP_LOGI(TAG, "WIFI_APP_MSG_STA_DISCONNECTED: ATTEMPT FAILED, CHECK WIFI ACCESS POINT AVAILABILITY");
+						// Adjust this case to your needs - maybe you want to keep trying to connect...
+					}
 
 					break;
 
@@ -225,7 +305,8 @@ void wifi_app_start(void)
 
 	// Create message queue
 	wifi_app_queue_handle = xQueueCreate(3, sizeof(wifi_app_queue_message_t));
-
+	// create wifi application event group
+	wifi_app_event_group = xEventGroupCreate();
 	// Start the WiFi application task
 	xTaskCreatePinnedToCore(&wifi_app_task, "wifi_app_task", WIFI_APP_TASK_STACK_SIZE, NULL, WIFI_APP_TASK_PRIORITY, NULL, WIFI_APP_TASK_CORE_ID);
 }
