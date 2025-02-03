@@ -13,6 +13,13 @@
 	<header>
 		<h1>ESP32 Application Development</h1>
 	</header>
+
+	<div id="LocalTime">
+		<h2>SNTP Time Synchronization</h2>
+		<label for="local_time">Connect to WiFi for Local Time: </label>
+		<div id="local_time"></div>
+	</div>
+	<hr>
 		
 	<div id="OTA">
 	<h2>ESP32 Firmware Update</h2>
@@ -50,12 +57,19 @@
 		<div id="wifi_connect_credentials_errors"></div>
 		<h4 id="wifi_connect_status"></h4>
 	</div>
-
-	<div id="WifiDisconnect">
-		<h2>ESP32 WiFi Disconnect</h2>
+		
+	<div id="ConnectInfo">
+		<section>
+			<div id="connected_ap_label"></div> <div id="connected_ap"></div>
+		</section>
+		<div id="ip_address_label"></div> <div id="wifi_connect_ip"></div>
+		<div id="netmask_label"></div> <div id="wifi_connect_netmask"></div>
+		<div id="gateway_label"></div> <div id="wifi_connect_gw"></div>
 		<div class="buttons">
+			<input id="disconnect_wifi" type="button" value="Disconnect" />
 		</div>
 	</div>
+	<hr>
 		
 	</body>
 <html>

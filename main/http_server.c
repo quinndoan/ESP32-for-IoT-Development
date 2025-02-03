@@ -9,6 +9,7 @@
 #include <queue.h>
 #include <esp_ota_ops.h>
 #include "wifi_app.h"
+#include <portmacro.h>
 
 static const char TAG[] = "http_server";
 
@@ -17,6 +18,9 @@ static int g_wifi_connect_status = NONE;
 
 // http server task handle
 static httpd_handle_t http_server_handle = NULL;
+
+// local time status
+static bool g_is_local_time_set = false;
 
 static int g_fw_update_status = OTA_UPDATE_PENDING;
 

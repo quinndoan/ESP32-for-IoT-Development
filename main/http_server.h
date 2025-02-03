@@ -1,4 +1,4 @@
-#include <portmacro.h>
+
 #ifndef MAIN_HTTP_SEVER_H_
 #define MAIN_HTTP_SERVER_H_
 
@@ -27,6 +27,7 @@ typedef enum http_server_message
     HTTP_MSG_WIFI_USER_DISCONNECT,
     HTTP_MSG_OTA_UPDATE_SUCCESSFUL,
     HTTP_MSG_OTA_UPDATE_FAILED,
+    HTTP_MSG_TIME_SERVICE_HTTP_INITIALIZED,
     HTTP_MSG_OTA_UPDATE_INITIALIZED,
 } http_server_message_e;
 

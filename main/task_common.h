@@ -20,4 +20,9 @@
 #define WIFI_RESET_BUTTON_PRIORITY          6
 #define WIFI_RESET_BUTTON_CORE_ID           0
 
+// SNTP task
+#define SNTP_TIME_SYNC_TASK_STACK_SIZE      4096
+#define SNTP_TIME_SYNC_TASK_PRIORITY        4
+#define STNP_TIME_SYNC_CORE_ID              0
+
 #endif
