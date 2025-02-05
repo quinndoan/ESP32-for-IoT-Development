@@ -4,5 +4,9 @@
     "idf.openOcdConfigs": [
         "board/esp32-wrover-kit-3.3v.cfg"
     ],
-    "idf.toolsPathWin": "c:\\espressif"
+    "idf.toolsPathWin": "c:\\espressif",
+    "files.associations": {
+        "*.embeddedhtml": "html",
+        "esp_log.h": "c"
+    }
 }
