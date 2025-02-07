@@ -20,7 +20,7 @@
 #include "task_common.h"
 #include "wifi_app.h"
 
-// add later after add the folder cloned from github
+// add later after add the folder cloned from github, clone version cũ
 #include "aws_iot_config.h"
 #include "aws_iot_log.h"
 #include "aws_iot_version.h"

@@ -30,4 +30,10 @@
 #define AWS_IOT_TASK_PRIORITY               6
 #define AWS_IOT_TASK_CORE_ID                1
 
+// DHT22 Task
+#define DHT22_TASK_STACK_SIZE               4096
+#define DHT22_TASK_PRIORITY                 5
+#define DHT22_TASK_CORE_ID                  1
+
+
 #endif
