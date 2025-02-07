@@ -1,7 +1,6 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/event_groups.h"
 #include "freertos/task.h"
-#include <queue.h>
 #include "esp_err.h"
 #include "esp_mac.h"
 #include "esp_log.h"
@@ -102,7 +101,7 @@ static void wifi_app_event_handler(void *arg, esp_event_base_t event_base, int32
 // initial wifi application event handler for wifi and IP events
 static void wifi_app_event_handler_init(void){
     // event loop
-    ESP_ERROR_CHECK(esp_event_loop_handle_create_default());
+    ESP_ERROR_CHECK(esp_event_loop_create_default());
 
     esp_event_handler_instance_t instance_wifi_event;
     esp_event_handler_instance_t instance_ip_event;
@@ -122,6 +121,12 @@ static void wifi_app_default_wifi_init(void){
     ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));
     esp_netif_sta = esp_netif_create_default_wifi_sta();
     esp_netif_ap = esp_netif_create_default_wifi_ap();
+}
+
+static void wifi_app_connect_sta(void)		// connect to an existed AP
+{
+	ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, wifi_app_get_wifi_config()));
+	ESP_ERROR_CHECK(esp_wifi_connect());
 }
 
 // configure access point and static IP for APsortAP
@@ -205,7 +210,7 @@ static void wifi_app_task(void *pvParameters)
 				case WIFI_APP_MSG_START_HTTP_SERVER:
 					ESP_LOGI(TAG, "WIFI_APP_MSG_START_HTTP_SERVER");
 					http_server_start();
-					rgb_led_http_server_started();
+				//	rgb_led_http_server_started();
 
 					break;
 
@@ -222,7 +227,7 @@ static void wifi_app_task(void *pvParameters)
 
 				case WIFI_APP_MSG_STA_CONNECTED_GOT_IP:
 					ESP_LOGI(TAG, "WIFI_APP_MSG_STA_CONNECTED_GOT_IP");
-					rgb_led_wifi_connected();
+				//	rgb_led_wifi_connected();
 					http_server_monitor_send_message(HTTP_MSG_WIFI_CONNECT_SUCCESS);
 					eventBits = xEventGroupGetBits(wifi_app_event_group);
 					if (eventBits & WIFI_APP_CONNECTING_USING_SAVED_CREDS_BIT){
@@ -245,7 +250,7 @@ static void wifi_app_task(void *pvParameters)
 					g_retry_number = MAX_CONNECTION_RETRIES;
 					ESP_ERROR_CHECK(esp_wifi_disconnect());
 					app_nvs_clear_sta_creds();
-					rgb_led_http_server_started();
+				//	rgb_led_http_server_started();
 
 					break;
 				
@@ -298,7 +303,7 @@ void wifi_app_start(void)
 	ESP_LOGI(TAG, "STARTING WIFI APPLICATION");
 
 	// Start WiFi started LED
-	rgb_led_wifi_app_started();
+	//rgb_led_wifi_app_started();, hàm này chưa viết
 
 	// Disable default WiFi logging messages
 	esp_log_level_set("wifi", ESP_LOG_NONE);

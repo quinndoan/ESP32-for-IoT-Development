@@ -1,7 +1,7 @@
 #ifndef MAIN_TASKS_COMMON_H
 #define MAIN_TASKS_COMMON_H
 
-#define CONFIG_LOG_MAXIMUM_LEVEL            1
+#define CONFIG_LOG_MAXIMUM_LEVEL            3
 #define WIFI_APP_TASK_STACK_SIZE            4096  // Kích thước stack cho WiFi Application Task (4KB). Dùng để lưu trữ dữ liệu cục bộ và ngữ cảnh của tác vụ.
 #define WIFI_APP_TASK_PRIORITY              5     // Độ ưu tiên của tác vụ WiFi. Ưu tiên cao hơn HTTP Server Task và Monitor Task.
 #define WIFI_APP_TASK_CORE_ID               0     // Tác vụ này được chạy trên Core 0 của ESP32.

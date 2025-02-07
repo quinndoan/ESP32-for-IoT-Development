@@ -7,8 +7,7 @@
 #include "sntp_time_sync.h"
 #include "wifi_app.h"
 #include "wifi_reset_button.h"
-
-extern CONFIG_LOG_MAXIMUM_LEVEL;
+#include "task_common.h"
 static const char TAG[] = "main";
 int aws_iot_demo_main( int argc, char ** argv );
 

@@ -66,7 +66,7 @@ char* sntp_time_sync_get_time(void){
         ESP_LOGI(TAG, "Time is not set yet");
     }
     else{
-        stftime(time_buffer, sizeof(time_buffer), "%d.%m.%Y %H:%M:%S", &time_info);
+        strftime(time_buffer, sizeof(time_buffer), "%d.%m.%Y %H:%M:%S", &time_info);
         ESP_LOGI(TAG, "Current time: %s", time_buffer);
 
     }

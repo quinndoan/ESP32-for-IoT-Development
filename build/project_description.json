@@ -1,7 +1,7 @@
 {
     "version":            "1.1",
     "project_name":       "ESP-WIFI-REVIEW",
-    "project_version":    "8b45e16-dirty",
+    "project_version":    "db50316-dirty",
     "project_path":       "D:/ESP-WIFI-REVIEW",
     "idf_path":           "C:/esp/v5.3/esp-idf",
     "build_dir":          "D:/ESP-WIFI-REVIEW/build",

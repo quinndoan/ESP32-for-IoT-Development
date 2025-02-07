@@ -5,7 +5,6 @@
 #include "nvs_flash.h"
 #include "wifi_app.h"
 
-extern CONFIG_LOG_MAXIMUM_LEVEL;
 // tag monitor the nvs 
 static const char TAG[] = "nvs";
 

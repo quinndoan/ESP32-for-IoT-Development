@@ -77,8 +77,6 @@
 #include "DHT22.h"
 #include "wifi_app.h"
 
-extern CONFIG_LOG_MAXIMUM_LEVEL;
-
 #ifdef CONFIG_EXAMPLE_USE_ESP_SECURE_CERT_MGR
     #include "esp_secure_cert_read.h"    
 #endif
