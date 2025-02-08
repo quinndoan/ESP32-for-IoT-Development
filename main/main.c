@@ -2,12 +2,13 @@
 
 #include "esp_log.h"
 #include "nvs_flash.h"
-
+#include "task_common.h"
 #include "DHT22.h"
-#include "sntp_time_sync.h"
 #include "wifi_app.h"
 #include "wifi_reset_button.h"
-#include "task_common.h"
+#include "sntp_time_sync.h"
+
+extern wifi_connected_event_callback_t wifi_connected_event_cb;
 static const char TAG[] = "main";
 int aws_iot_demo_main( int argc, char ** argv );
 
@@ -40,6 +41,7 @@ void app_main(void)
 	DHT22_task_start();
 
 	// Set connected event callback
-	wifi_app_set_callback(&wifi_application_connected_events);
+	//wifi_app_set_callback(&wifi_application_connected_events);
+	wifi_app_call_callback();
 }
 

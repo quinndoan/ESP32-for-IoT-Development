@@ -21,6 +21,8 @@ static const char TAG[] = "wifi_app";
 static QueueHandle_t wifi_app_queue_handle;
 wifi_config_t *wifi_config = NULL;
 static int g_retry_number;
+//static wifi_connected_event_callback_t wifi_connected_event_cb;
+wifi_connected_event_callback_t wifi_connected_event_cb;
 
 // wifi application event group and status bits
 static EventGroupHandle_t wifi_app_event_group;
@@ -30,7 +32,6 @@ const int WIFI_APP_USER_REQUESTED_STA_DISCONNECT_BIT	= BIT2;
 
 esp_netif_t* esp_netif_sta = NULL;
 esp_netif_t* esp_netif_ap = NULL;
-#define CONFIG_ESP_WIFI_DYNAMIC_RX_BUFFER_NUM    10
 /**
  * WiFi application event handler
  * @param arg data, aside from event data, that is passed to the handler when it is called
@@ -163,6 +164,25 @@ static void wifi_app_soft_ap_config(void)
 	ESP_ERROR_CHECK(esp_wifi_set_bandwidth(WIFI_IF_AP, WIFI_AP_BANDWIDTH));		///> Our default bandwidth 20 MHz
 	ESP_ERROR_CHECK(esp_wifi_set_ps(WIFI_STA_POWER_SAVE));						///> Power save set to "NONE"
 
+}
+
+void wifi_app_call_callback(void)
+{
+	wifi_connected_event_cb();
+}
+
+int8_t wifi_app_get_rssi(void)
+{
+	wifi_ap_record_t wifi_data;
+
+	ESP_ERROR_CHECK(esp_wifi_sta_get_ap_info(&wifi_data));
+
+	return wifi_data.rssi;
+}
+
+wifi_config_t* wifi_app_get_wifi_config(void)
+{
+	return wifi_config;
 }
 
 // main app

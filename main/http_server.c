@@ -52,7 +52,7 @@ extern const uint8_t favicon_ico_end[]				asm("_binary_favicon_ico_end");
 
 /**
  * Checks the g_fw_update_status and creates the fw_update_reset timer if g_fw_update_status is true.
- */
+ */	// đợi vài giây để OTA
 static void http_server_fw_update_reset_timer(void)
 {
 	if (g_fw_update_status == OTA_UPDATE_SUCCESSFUL)
@@ -70,7 +70,7 @@ static void http_server_fw_update_reset_timer(void)
 }
 
 
-// monitor task to track events of the HTTP
+// monitor task to track events of the HTTP, xử lý receive nhận từ server
 static void http_server_monitor(void *parameter){
     http_server_queue_message_t msg;
     for (;;){

@@ -4903,6 +4903,16 @@
             {
                 "children": [],
                 "depends_on": null,
+                "help": "Type a user name that you want to use in the code",
+                "id": "USER_NAME",
+                "name": "USER_NAME",
+                "range": null,
+                "title": "user name",
+                "type": "string"
+            },
+            {
+                "children": [],
+                "depends_on": null,
                 "help": "The MQTT client identifier used in this example. Each client identifier must be unique.\nso edit as required to ensure that no two clients connecting to the same broker use the same client identifier.",
                 "id": "MQTT_CLIENT_IDENTIFIER",
                 "name": "MQTT_CLIENT_IDENTIFIER",

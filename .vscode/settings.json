@@ -7,6 +7,8 @@
     "idf.toolsPathWin": "c:\\espressif",
     "files.associations": {
         "*.embeddedhtml": "html",
-        "esp_log.h": "c"
-    }
+        "esp_log.h": "c",
+        "task_common.h": "c"
+    },
+    "idf.flashType": "UART"
 }

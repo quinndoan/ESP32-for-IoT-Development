@@ -1,5 +1,11 @@
 menu "Example Configuration"
 
+    config USER_NAME
+        string "user name"
+        default "Quinn"
+        help
+            Type a user name that you want to use in the code
+
     config MQTT_CLIENT_IDENTIFIER
         string "The MQTT client identifier used in this example"
         default "testClient"
