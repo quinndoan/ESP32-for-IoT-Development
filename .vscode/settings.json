@@ -10,5 +10,6 @@
         "esp_log.h": "c",
         "task_common.h": "c"
     },
-    "idf.flashType": "UART"
+    "idf.flashType": "UART",
+    "idf.portWin": "COM3"
 }
