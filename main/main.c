@@ -41,7 +41,7 @@ void app_main(void)
 	DHT22_task_start();
 
 	// Set connected event callback
-	//wifi_app_set_callback(&wifi_application_connected_events);
+	wifi_app_set_callback(&wifi_application_connected_events);
 	//wifi_app_call_callback();
 }
 

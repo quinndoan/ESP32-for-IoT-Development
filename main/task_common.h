@@ -23,7 +23,7 @@
 // SNTP task
 #define SNTP_TIME_SYNC_TASK_STACK_SIZE      4096
 #define SNTP_TIME_SYNC_TASK_PRIORITY        4
-#define STNP_TIME_SYNC_CORE_ID              0
+#define STNP_TIME_SYNC_CORE_ID              1
 
 // AWS IoT task
 #define AWS_IOT_TASK_STACK_SIZE             9216

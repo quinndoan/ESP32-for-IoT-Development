@@ -22,7 +22,7 @@ static QueueHandle_t wifi_app_queue_handle;
 wifi_config_t *wifi_config = NULL;
 static int g_retry_number;
 //static wifi_connected_event_callback_t wifi_connected_event_cb;
-wifi_connected_event_callback_t wifi_connected_event_cb;
+static wifi_connected_event_callback_t wifi_connected_event_cb;
 
 // wifi application event group and status bits
 static EventGroupHandle_t wifi_app_event_group;
@@ -164,6 +164,11 @@ static void wifi_app_soft_ap_config(void)
 	ESP_ERROR_CHECK(esp_wifi_set_bandwidth(WIFI_IF_AP, WIFI_AP_BANDWIDTH));		///> Our default bandwidth 20 MHz
 	ESP_ERROR_CHECK(esp_wifi_set_ps(WIFI_STA_POWER_SAVE));						///> Power save set to "NONE"
 
+}
+
+void wifi_app_set_callback(wifi_connected_event_callback_t cb)
+{
+	wifi_connected_event_cb = cb;
 }
 
 void wifi_app_call_callback(void)
