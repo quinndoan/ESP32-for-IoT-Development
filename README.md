@@ -3,7 +3,7 @@
 
 # ESP32_IoT_SERIES
 
-The project gathers commonly used ESP32 functions and modules for IoT development. It is a learning process conducted in the lab, with references from sources such as the ESP-IDF website and Udemy courses.
+The project gathers commonly used ESP32 functions and modules for IoT development. It is my learning process conducted in the lab, with references from sources such as the ESP-IDF website and Udemy courses.
 
 (See the README.md file in the upper level 'examples' directory for more information about examples.)
 
