@@ -1,5 +1,3 @@
-//#define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
-
 #include <stdio.h>
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"
@@ -10,112 +8,54 @@
 #include "DHT22.h"
 #include "task_common.h"
 
-// == global defines =============================================
+static const char *TAG = "DHT";
 
-static const char* TAG = "DHT";
-
-int DHTgpio = 4;				// my default DHT pin = 4
-float humidity = 0.;
+int DHTgpio = 4;
 float temperature = 0.;
+float humidity = 0.;
 
-// == set the DHT used pin=========================================
-
-void setDHTgpio( int gpio )
-{
-	DHTgpio = gpio;
+void setDHTgpio(int gpio){
+    DHTgpio = gpio;
 }
 
-// == get temp & hum =============================================
-
-float getHumidity() { return humidity; }
-float getTemperature() { return temperature; }
-
-// == error handler ===============================================
-
-void errorHandler(int response)
-{
-	switch(response) {
-	
-		case DHT_TIMEOUT_ERROR :
-			ESP_LOGE( TAG, "Sensor Timeout\n" );
-			break;
-
-		case DHT_CHECKSUM_ERROR:
-			ESP_LOGE( TAG, "CheckSum error\n" );
-			break;
-
-		case DHT_OK:
-			break;
-
-		default :
-			ESP_LOGE( TAG, "Unknown error\n" );
-	}
+float getHumidity(){
+    return humidity;
+}
+float getTemperature(){
+    return temperature;
 }
 
-/*-------------------------------------------------------------------------------
-;
-;	get next state 
-;
-;	I don't like this logic. It needs some interrupt blocking / priority
-;	to ensure it runs in realtime.
-;
-;--------------------------------------------------------------------------------*/
+void errorHandler(int response){
+    switch (response)
+    {
+    case DHT_CHECKSUM_ERROR:
+        ESP_LOGE(TAG, "CheckSum error");
+        break;
 
-int getSignalLevel( int usTimeOut, bool state )
-{
+    case DHT_TIMEOUT_ERROR:
+    ESP_LOGE(TAG, "Timeout Error");
+    break;
 
-	int uSec = 0;
-	while( gpio_get_level(DHTgpio)==state ) {
-
-		if( uSec > usTimeOut ) 
-			return -1;
-		
-		++uSec;
-		esp_rom_delay_us(1);		// uSec delay
-	}
-	
-	return uSec;
+    case DHT_OK:
+    //ESP_LOGE(TAG, "Timeout Error");
+    break;
+    
+    default:
+        ESP_LOGE(TAG, "Unknown Error");
+    }
 }
 
-/*----------------------------------------------------------------------------
-;
-;	read DHT22 sensor
-
-copy/paste from AM2302/DHT22 Docu:
-
-DATA: Hum = 16 bits, Temp = 16 Bits, check-sum = 8 Bits
-
-Example: MCU has received 40 bits data from AM2302 as
-0000 0010 1000 1100 0000 0001 0101 1111 1110 1110
-16 bits RH data + 16 bits T data + check sum
-
-1) we convert 16 bits RH data from binary system to decimal system, 0000 0010 1000 1100 → 652
-Binary system Decimal system: RH=652/10=65.2%RH
-
-2) we convert 16 bits T data from binary system to decimal system, 0000 0001 0101 1111 → 351
-Binary system Decimal system: T=351/10=35.1°C
-
-When highest bit of temperature is 1, it means the temperature is below 0 degree Celsius. 
-Example: 1000 0000 0110 0101, T= minus 10.1°C: 16 bits T data
-
-3) Check Sum=0000 0010+1000 1100+0000 0001+0101 1111=1110 1110 Check-sum=the last 8 bits of Sum=11101110
-
-Signal & Timings:
-
-The interval of whole process must be beyond 2 seconds.
-
-To request data from DHT:
-
-1) Sent low pulse for > 1~10 ms (MILI SEC)
-2) Sent high pulse for > 20~40 us (Micros).
-3) When DHT detects the start signal, it will pull low the bus 80us as response signal, 
-   then the DHT pulls up 80us for preparation to send data.
-4) When DHT is sending data to MCU, every bit's transmission begin with low-voltage-level that last 50us, 
-   the following high-voltage-level signal's length decide the bit is "1" or "0".
-	0: 26~28 us
-	1: 70 us
-
-;----------------------------------------------------------------------------*/
+int getSignalLevel(int usTimeOut, bool state){
+    int uSec = 0;
+    while (gpio_get_level(DHTgpio)== state){
+        if (uSec > usTimeOut){
+            return -1;
+        }
+        ++uSec;
+        esp_rom_delay_us(1);
+    }
+    return uSec;
+}
 
 #define MAXdhtData 5	// to complete 40 = 5*8 Bits
 
@@ -130,7 +70,6 @@ uint8_t bitInx = 7;
 	for (int k = 0; k<MAXdhtData; k++) 
 		dhtData[k] = 0;
 
-	// == Send start signal to DHT sensor ===========
 
 	gpio_set_direction( DHTgpio, GPIO_MODE_OUTPUT );
 
@@ -142,21 +81,19 @@ uint8_t bitInx = 7;
 	gpio_set_level( DHTgpio, 1 );
 	esp_rom_delay_us( 25 );
 
-	gpio_set_direction( DHTgpio, GPIO_MODE_INPUT );		// change to input mode
+	gpio_set_direction( DHTgpio, GPIO_MODE_INPUT ); // mode input
   
-	// == DHT will keep the line low for 80 us and then high for 80us ====
 
 	uSec = getSignalLevel( 85, 0 );
-//	ESP_LOGI( TAG, "Response = %d", uSec );
 	if( uSec<0 ) return DHT_TIMEOUT_ERROR; 
 
 	// -- 80us up ------------------------
 
 	uSec = getSignalLevel( 85, 1 );
-//	ESP_LOGI( TAG, "Response = %d", uSec );
+
 	if( uSec<0 ) return DHT_TIMEOUT_ERROR;
 
-	// == No errors, read the 40 data bits ================
+    // there are no errors, read 40 bits
   
 	for( int k = 0; k < 40; k++ ) {
 
@@ -184,26 +121,25 @@ uint8_t bitInx = 7;
 		else bitInx--;
 	}
 
-	// == get humidity from Data[0] and Data[1] ==========================
+	// humidity from Data[0] and Data[1]
 
 	humidity = dhtData[0];
-	humidity *= 0x100;					// >> 8
+	humidity *= 0x100;					// << 8
 	humidity += dhtData[1];
 	humidity /= 10;						// get the decimal
 
 	// == get temp from Data[2] and Data[3]
 	
 	temperature = dhtData[2] & 0x7F;	
-	temperature *= 0x100;				// >> 8
+	temperature *= 0x100;				// move 8 bits to the left, equal *256
 	temperature += dhtData[3];
 	temperature /= 10;
 
-	if( dhtData[2] & 0x80 ) 			// negative temp, brrr it's freezing
+	if( dhtData[2] & 0x80 ) // negative temperature
 		temperature *= -1;
 
 
-	// == verify if checksum is ok ===========================================
-	// Checksum is the sum of Data 8 bits masked out 0xFF
+	//checksum
 	
 	if (dhtData[4] == ((dhtData[0] + dhtData[1] + dhtData[2] + dhtData[3]) & 0xFF)) 
 		return DHT_OK;
@@ -212,32 +148,18 @@ uint8_t bitInx = 7;
 		return DHT_CHECKSUM_ERROR;
 }
 
-/**
- * DHT22 Sensor task
- */
-static void DHT22_task(void *pvParameter)
-{
-	setDHTgpio(DHT_GPIO);
-//	printf("Starting DHT task\n\n");
+// Task for DHT22 reading
 
-	for (;;)
-	{
-//		printf("=== Reading DHT ===\n");
-		int ret = readDHT();
-
-		errorHandler(ret);
-
-//		printf("Hum %.1f\n", getHumidity());
-//		printf("Tmp %.1f\n", getTemperature());
-
-		// Wait at least 2 seconds before reading again
-		// The interval of the whole process must be more than 2 seconds
-		vTaskDelay(4000 / portTICK_PERIOD_MS);
-	}
+static void DHT22_task(void *pvParameter){
+    setDHTgpio(DHTgpio);
+    for (;;){
+        int res = readDHT();
+        errorHandler(res);
+        vTaskDelay(4000);
+    }
 }
 
-void DHT22_task_start(void)
-{
-	xTaskCreatePinnedToCore(&DHT22_task, "DHT22_task", DHT22_TASK_STACK_SIZE, NULL, DHT22_TASK_PRIORITY, NULL, DHT22_TASK_CORE_ID);
+// register task
+void DHT22_task_start(void){
+    xTaskCreatePinnedToCore(&DHT22_task, "DHT22_task", DHT22_TASK_STACK_SIZE, NULL, DHT22_TASK_PRIORITY, NULL, DHT22_TASK_CORE_ID);
 }
-
