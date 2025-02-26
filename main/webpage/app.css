@@ -1,4 +1,4 @@
-
+/* 
 
 body {
     background-color: #f1f1f1;
@@ -123,4 +123,139 @@ input[type="button"]:active {
 }
 
 
+ */
+ body {
+    background-color: #f5f7fa;
+    font-family: 'Roboto', 'Segoe UI', Arial, sans-serif;
+    color: #3a86ff;
+}
 
+h1 {
+    display: block;
+    text-align: center;
+    margin: 0;
+    padding: 15px;
+    font-size: 1.9em;
+    color: #5e60ce;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+}
+
+h2 {
+    font-size: 1.5em;
+    color: #5e60ce;
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 5px;
+}
+
+h3 {
+    font-size: 1.3em;
+    color: #5e60ce;
+}
+
+h4 {
+    font-size: 1.1em;
+    color: #5e60ce;
+}
+
+.gr {
+    color: #06d6a0;
+    font-weight: 500;
+}
+
+.rd {
+    color: #ef476f;
+    font-weight: 500;
+}
+
+#local_time {
+    display: inline;
+    color: #5e60ce;
+    font-weight: bold;
+}
+
+#latest_firmware, #latest_firmware_label {
+    display: inline;
+}
+
+#latest_firmware {
+    color: #5e60ce;
+    font-weight: bold;
+}
+
+#temperature_reading {
+    display: inline;
+    color: #ff9e00;
+    font-weight: bold;
+}
+
+#humidity_reading {
+    display: inline;
+    color: #3a86ff;
+    font-weight: bold;
+}
+
+#connected_ap_label, #connected_ap {
+    display: inline;
+}
+
+#ip_address_label, #netmask_label, #gateway_label {
+    display: inline;
+}
+
+#wifi_connect_ip, #wifi_connect_netmask, #wifi_connect_gw {
+    display: inline;
+}
+
+#connected_ap {
+    color: #5e60ce;
+    font-weight: bold;
+}
+
+#wifi_connect_ip {
+    color: #5e60ce;
+    font-weight: bold;
+}
+
+#wifi_connect_netmask {
+    color: #5e60ce;
+    font-weight: bold;
+}
+
+#wifi_connect_gw {
+    color: #5e60ce;
+    font-weight: bold;
+}
+
+#disconnect_wifi {
+    display: none;
+}
+
+.buttons {
+    padding: 8px;
+}
+
+input[type="button"] {
+    font-size: 13px;
+    border: 0;
+    line-height: 2.2;
+    padding: 0 12px;
+    text-align: center;
+    color: #ffffff;
+    text-shadow: none;
+    border-radius: 6px;
+    background-color: #5e60ce;
+    background-image: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+}
+
+input[type="button"]:hover {
+    background-color: #6930c3;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+input[type="button"]:active {
+    transform: translateY(1px);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
