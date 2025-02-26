@@ -18,10 +18,10 @@ The project gathers commonly used ESP32 functions and modules for IoT developmen
 ## How to Use the Project
 
 1. Set up DHT22 pins and connections.  
-2. Build and flash the project.  
+2. Build, flash project and monitor device (ESP32).  
 3. Connect a device (laptop or smartphone) to the "ESP32_AP" Wi-Fi network.  
-4. Access the IP address: 192.168.0.1 (or 192.168.0.2).  
-5. After accessing the ESP server's website, the expected result should be as follows:  
+4. Access the given IP address on the monitor.  
+5. After accessing the ESP server's website by your device, the expected result should be as follows:  
 
 ![Alt text](esp32App.png)
 
